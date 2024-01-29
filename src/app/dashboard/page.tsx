@@ -52,6 +52,10 @@ export default async function Dashboard() {
                         ))}
                     </tbody>
                 </table>
+
+                {tickets.length === 0 && (
+                    <h1 className="px-2 text-gray-600">Você não possui chamados em aberto...</h1>
+                )}
             </main>
         </Container>
     )
