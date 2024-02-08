@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { FiSearch, FiX } from 'react-icons/fi';
 import { FormTicket } from './components/FormTicket';
+import { api } from '@/lib/api';
 
 const schema = z.object({
     email: z.string().email("Digite o email do cliente para localizar.").min(1, "O campo email é obrigatório.")
@@ -22,13 +23,32 @@ interface CustomerDataInfo {
 export default function OpenTicket() {
     const [customer, setCustomer] = useState<CustomerDataInfo | null>(null);
 
-    const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormData>({
+    const { register, handleSubmit, setValue, setError, formState: { errors } } = useForm<FormData>({
         resolver: zodResolver(schema)
     });
 
     function handleClearCustomer() {
         setCustomer(null);
         setValue("email", "");
+    }
+
+    async function handleSearchCustomer(data: FormData) {
+        const response = await api.get("/api/customer", {
+            params: {
+                email: data.email
+            }
+        })
+
+        if(response.data === null) {
+            setError("email", { type: "custom", message: "Ops, cliente não encontrado!" })
+            return;
+        }
+
+        setCustomer({
+            id: response.data.id,
+            name: response.data.name,
+
+        })
     }
 
     return(
@@ -45,7 +65,10 @@ export default function OpenTicket() {
                         </button>
                     </div>
                 ) : (
-                    <form className="bg-slate-200 py-6 px-2 rounded border-2">
+                    <form
+                        className="bg-slate-200 py-6 px-2 rounded border-2"
+                        onSubmit={handleSubmit(handleSearchCustomer)}
+                    >
                         <div className="flex flex-col gap-3">
                             <Input
                                 name="email"
